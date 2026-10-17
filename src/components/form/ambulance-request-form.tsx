@@ -1,8 +1,8 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "@tanstack/react-form";
 import {
   User,
@@ -51,6 +51,11 @@ const EMERGENCY_TYPES = [
     icon: "❤️",
   },
   {
+    value: "STROKE" as const,
+    label: "Stroke",
+    icon: "🧠",
+  },
+  {
     value: "PREGNANCY" as const,
     label: "Pregnancy",
     icon: "🤰",
@@ -74,6 +79,7 @@ const EMERGENCY_TYPES = [
 
 export default function AmbulanceRequestForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [isGettingLocation, setIsGettingLocation] = useState(false);
 
@@ -132,6 +138,30 @@ export default function AmbulanceRequestForm() {
       });
     },
   });
+
+  // Pre-fill emergency type from URL parameter
+  useEffect(() => {
+    const emergencyTypeParam = searchParams.get("emergencyType");
+
+    if (emergencyTypeParam) {
+      const validEmergencyTypes = [
+        "ACCIDENT",
+        "CARDIAC",
+        "STROKE",
+        "PREGNANCY",
+        "TRAUMA",
+        "BREATHING_PROBLEM",
+        "OTHER",
+      ];
+
+      if (validEmergencyTypes.includes(emergencyTypeParam)) {
+        form.setFieldValue(
+          "emergencyType",
+          emergencyTypeParam as EmergencyType,
+        );
+      }
+    }
+  }, [searchParams]);
 
   const handleGetCurrentLocation = () => {
     if (!navigator.geolocation) {

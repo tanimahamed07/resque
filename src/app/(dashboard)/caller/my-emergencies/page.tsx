@@ -49,7 +49,12 @@ export default function MyEmergenciesPage() {
   if (status !== "ALL") params.status = status;
   if (debouncedSearchTerm) params.searchTerm = debouncedSearchTerm;
 
-  const { data: response, isLoading, error } = useGetMyEmergencies(params);
+  const {
+    data: response,
+    isLoading,
+    isFetching,
+    error,
+  } = useGetMyEmergencies(params);
 
   const emergencies = response?.data?.data ?? [];
   const meta = response?.data?.meta;
@@ -151,20 +156,35 @@ export default function MyEmergenciesPage() {
 
       {!isLoading && !error && (
         <>
-          <EmergenciesTable basePath="my-emergencies/" emergencies={emergencies} />
-
-          {meta && meta.totalPages > 0 && (
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-muted-foreground text-center sm:text-left">
-                Showing {emergencies.length} of {meta.total} results
-              </p>
-
-              <TablePagination
-                page={page}
-                totalPages={meta.totalPages}
-                handlePageChange={setPage}
-              />
+          {/* Show filtering spinner when tab changes or search */}
+          {isFetching && (
+            <div className="flex items-center justify-center gap-2 rounded-lg border bg-muted/30 p-4">
+              <Spinner className="h-4 w-4" />
+              <p className="text-sm text-muted-foreground">Loading...</p>
             </div>
+          )}
+
+          {!isFetching && (
+            <>
+              <EmergenciesTable
+                basePath="my-emergencies/"
+                emergencies={emergencies}
+              />
+
+              {meta && meta.totalPages > 0 && (
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm text-muted-foreground text-center sm:text-left">
+                    Showing {emergencies.length} of {meta.total} results
+                  </p>
+
+                  <TablePagination
+                    page={page}
+                    totalPages={meta.totalPages}
+                    handlePageChange={setPage}
+                  />
+                </div>
+              )}
+            </>
           )}
         </>
       )}

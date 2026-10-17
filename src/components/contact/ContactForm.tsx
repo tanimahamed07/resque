@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/toast";
 import {
   Select,
   SelectContent,
@@ -33,8 +34,14 @@ export default function ContactForm() {
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    // Handle form submission here
+    // Show success toast
+    toast.add({
+      title: "Message Sent Successfully!",
+      description: "Thank you for contacting us. We'll get back to you soon.",
+      type: "success",
+    });
 
+    // Reset form
     setName("");
     setEmail("");
     setSubject("general");

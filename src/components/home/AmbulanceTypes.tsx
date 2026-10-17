@@ -3,7 +3,15 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Snowflake, HeartPulse, Wind, Plane, Fan } from "lucide-react";
+import {
+  Car,
+  HeartPulse,
+  Brain,
+  Baby,
+  Bandage,
+  Wind,
+  Stethoscope,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,39 +24,50 @@ import {
 
 const TYPES = [
   {
-    icon: Fan,
-    type: "NON_AC",
-    title: "Non-AC",
-    description: "Standard transport for stable, non-critical patients.",
-    features: ["First-aid kit", "Stretcher", "Trained attendant"],
-  },
-  {
-    icon: Wind,
-    type: "AC",
-    title: "AC",
-    description: "Climate-controlled transport for a more comfortable ride.",
-    features: ["Air conditioning", "Stretcher", "Trained attendant"],
+    icon: Car,
+    type: "ACCIDENT",
+    title: "Accident",
+    description: "Emergency response for vehicle accidents and collisions.",
+    features: ["Trauma care", "Rapid stabilization", "Emergency transport"],
   },
   {
     icon: HeartPulse,
-    type: "ICU",
-    title: "ICU",
-    description: "Full life-support setup for critical and cardiac cases.",
-    features: ["Ventilator", "Cardiac monitor", "Paramedic on board"],
+    type: "CARDIAC",
+    title: "Cardiac Emergency",
+    description: "Specialized care for heart attacks and cardiac conditions.",
+    features: ["ECG monitoring", "Defibrillator", "Cardiac specialist"],
   },
   {
-    icon: Snowflake,
-    type: "FREEZER",
-    title: "Freezer",
-    description: "Refrigerated transport for deceased patients.",
-    features: ["Cold storage unit", "Dignified handling"],
+    icon: Brain,
+    type: "STROKE",
+    title: "Stroke",
+    description: "Time-critical care for stroke patients.",
+    features: [
+      "Neurological assessment",
+      "Rapid hospital transfer",
+      "Stroke protocol",
+    ],
   },
   {
-    icon: Plane,
-    type: "AIR",
-    title: "Air ambulance",
-    description: "Fastest option for long-distance or cross-region transfers.",
-    features: ["Rapid transfer", "Onboard medical team"],
+    icon: Baby,
+    type: "PREGNANCY",
+    title: "Pregnancy",
+    description: "Safe transport for pregnancy-related emergencies.",
+    features: ["Maternal care", "Comfortable transport", "OB/GYN support"],
+  },
+  {
+    icon: Bandage,
+    type: "TRAUMA",
+    title: "Trauma",
+    description: "Critical care for severe injuries and trauma cases.",
+    features: ["Advanced life support", "Trauma specialist", "ICU equipment"],
+  },
+  {
+    icon: Wind,
+    type: "BREATHING_PROBLEM",
+    title: "Breathing Problem",
+    description: "Immediate care for respiratory distress and emergencies.",
+    features: ["Oxygen support", "Ventilator", "Respiratory specialist"],
   },
 ];
 
@@ -68,16 +87,16 @@ const item = {
 
 export default function AmbulanceTypes() {
   return (
-    <section className="bg-background py-20">
+    <section className="bg-background py-20" id="ambulance-types">
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-12 max-w-xl">
           <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            An ambulance for every situation
+            Emergency care for every situation
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Pick the right vehicle when you request one. Fare is calculated
-            after the trip, based on distance and emergency priority — not the
-            vehicle type.
+            Select the type of emergency you're experiencing. Our dispatch
+            system will send the most appropriate ambulance with specialized
+            equipment and trained staff.
           </p>
         </div>
 
@@ -111,18 +130,14 @@ export default function AmbulanceTypes() {
                 </CardContent>
 
                 <CardFooter className="border-t border-border pt-4">
-                  <Button
-                    size="sm"
+                  <Link
+                    href={`/caller/request?emergencyType=${type}`}
                     className="w-full"
-                    nativeButton={false}
-                    render={
-                      <Link
-                        href={`/caller/request-emergency?ambulanceType=${type}`}
-                      />
-                    }
                   >
-                    Request this type
-                  </Button>
+                    <Button size="sm" className="w-full">
+                      Request for {title}
+                    </Button>
+                  </Link>
                 </CardFooter>
               </Card>
             </motion.div>

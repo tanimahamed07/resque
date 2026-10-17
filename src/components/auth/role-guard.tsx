@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect } from "react";
 import { useGetMe } from "@/hooks";
 import type { UserRole } from "@/types/user.types";
@@ -14,6 +14,8 @@ interface IProps {
 
 export default function RoleGuard({ children, roles }: IProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const { data, isPending, isError } = useGetMe();
 
@@ -27,9 +29,21 @@ export default function RoleGuard({ children, roles }: IProps) {
       return;
     }
     if (isError || !user) {
-      router.replace("/login");
+      // Build the full URL including search params to redirect back after login
+      const queryString = searchParams.toString();
+      const fullPath = queryString ? `${pathname}?${queryString}` : pathname;
+      const loginUrl = `/login?callbackUrl=${encodeURIComponent(fullPath)}`;
+
+      console.log("RoleGuard redirect:", {
+        pathname,
+        queryString,
+        fullPath,
+        loginUrl,
+      });
+
+      router.replace(loginUrl);
     }
-  }, [isPending, isError, user, router.replace]);
+  }, [isPending, isError, user, router, pathname, searchParams]);
 
   if (isPending) {
     return <AuthLoading />;

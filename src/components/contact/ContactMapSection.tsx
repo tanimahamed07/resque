@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import { MapPin, Navigation } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 
 const OFFICE_LOCATION = "Dhanmondi 27, Dhaka, Bangladesh";
 
@@ -51,22 +50,15 @@ export default function ContactMapSection() {
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full sm:w-auto"
-                render={(props) => (
-                  <a
-                    {...props}
-                    href={`https://www.google.com/maps/search/?api=1&query=${MAP_QUERY}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <Navigation className="mr-2 h-4 w-4" />
-                    Open in Maps
-                  </a>
-                )}
-              />
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${MAP_QUERY}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-7 w-full items-center justify-center gap-1 rounded-[min(var(--radius-md),12px)] border border-border bg-background px-2.5 text-[0.8rem] font-medium text-foreground transition-all hover:bg-muted hover:text-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-ring/50 active:translate-y-px sm:w-auto dark:border-input dark:bg-input/30 dark:hover:bg-input/50"
+              >
+                <Navigation className="h-3.5 w-3.5" />
+                Open in Maps
+              </a>
             </CardHeader>
 
             <CardContent className="p-0">

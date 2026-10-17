@@ -1,3 +1,6 @@
+"use client";
+
+import { useGetMe } from "@/hooks";
 import AmbulanceTypes from "@/components/home/AmbulanceTypes";
 import BecomeDriver from "@/components/home/BecomeDriver";
 import FeaturesGrid from "@/components/home/FeaturesGrid";
@@ -13,12 +16,20 @@ import Testimonials from "@/components/home/Testimonials";
 import TripLifecycle from "@/components/home/TripLifecycle";
 
 export default function HomePage() {
+  const { data } = useGetMe();
+  const user = data?.data;
+
+  // Hide AmbulanceTypes section for ADMIN, DISPATCHER, and DRIVER
+  // Show only for public users (not logged in) and CALLER role
+  const shouldHideAmbulanceTypes =
+    user && ["ADMIN", "DISPATCHER", "DRIVER"].includes(user.role);
+
   return (
     <div>
       <HeroSection></HeroSection>
       <StatsCounters></StatsCounters>
       <HowItWorks></HowItWorks>
-      <AmbulanceTypes></AmbulanceTypes>
+      {!shouldHideAmbulanceTypes && <AmbulanceTypes></AmbulanceTypes>}
       <FeaturesGrid></FeaturesGrid>
       <BecomeDriver></BecomeDriver>
       <TripLifecycle></TripLifecycle>

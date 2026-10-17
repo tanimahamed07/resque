@@ -5,20 +5,20 @@ import { Separator } from "@/components/ui/separator";
 
 const COMPANY_LINKS = [
   { href: "/about", label: "About" },
-  { href: "/services", label: "Services" },
-  { href: "/how-it-works", label: "How it works" },
-  { href: "/become-a-driver", label: "Become a driver" },
+  { href: "/faq", label: "FAQ" },
+  { href: "/contact", label: "Contact" },
+  { href: "/#ambulance-types", label: "Services" },
 ];
 
 const SUPPORT_LINKS = [
-  { href: "/hospitals", label: "Hospitals" },
-  { href: "/faq", label: "FAQ" },
-  { href: "/contact", label: "Contact" },
+  { href: "/contact", label: "Help & Support" },
+  { href: "/faq", label: "Common Questions" },
+  { href: "tel:999", label: "Emergency Hotline" },
 ];
 
 const LEGAL_LINKS = [
-  { href: "/privacy-policy", label: "Privacy policy" },
-  { href: "/terms", label: "Terms of service" },
+  { href: "#privacy", label: "Privacy policy" },
+  { href: "#terms", label: "Terms of service" },
 ];
 
 export default function Footer() {
@@ -64,12 +64,21 @@ export default function Footer() {
             <ul className="mt-4 space-y-2.5">
               {SUPPORT_LINKS.map((link) => (
                 <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-                  >
-                    {link.label}
-                  </Link>
+                  {link.href.startsWith("tel:") ? (
+                    <a
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <Link
+                      href={link.href}
+                      className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                    >
+                      {link.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>

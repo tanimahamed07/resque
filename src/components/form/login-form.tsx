@@ -48,6 +48,9 @@ export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/";
 
+  // Debug: Log the callbackUrl
+  console.log("LoginForm - callbackUrl:", callbackUrl);
+
   const { mutate: login, isPending: loginPending } = useLogin();
 
   const form = useForm({
@@ -68,14 +71,19 @@ export default function LoginForm() {
 
       login(loginData, {
         onSuccess: () => {
+          console.log("Login successful, redirecting to:", callbackUrl);
+
           toast.add({
             title: "Login Success",
             description: "Welcome back",
             type: "success",
           });
 
-          // Redirect to callback URL or default to home
-          router.push(callbackUrl);
+          // Use window.location.href for reliable redirect with callbackUrl
+          // Add a small delay to ensure toast is visible
+          setTimeout(() => {
+            window.location.href = callbackUrl;
+          }, 500);
         },
 
         onError: (err) => {
@@ -255,7 +263,9 @@ export default function LoginForm() {
       </div>
 
       {/* Google Login */}
-      <GoogleLoginComponent />
+      <div className="flex justify-center">
+        <GoogleLoginComponent />
+      </div>
 
       {/* Demo Credentials Quick Fill Section */}
       <div className="space-y-3 pt-2">

@@ -6,6 +6,7 @@ import { useGetMe } from "@/hooks";
 import { getRoutesForRole } from "@/routes";
 import { DashboardHeader } from "./DashboardHeader";
 import { DashboardSidebar } from "./DashboardSidebar";
+import FloatingChatbot from "@/components/ai-chatbot/floating-chatbot";
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -31,6 +32,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+      <FloatingChatbot />
     </div>
   );
 }

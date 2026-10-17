@@ -8,8 +8,8 @@ export default function contactPage() {
   return (
     <div>
       <ContactHero></ContactHero>
-      <ContactForm></ContactForm>
       <ContactInfoCards></ContactInfoCards>
+      <ContactForm></ContactForm>
       <ContactMapSection></ContactMapSection>
     </div>
   );
