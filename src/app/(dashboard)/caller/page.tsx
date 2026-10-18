@@ -14,10 +14,50 @@ import {
   DollarSign,
   Wallet,
   CreditCard,
+  TrendingUp,
+  FileText,
 } from "lucide-react";
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Label,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
+  XAxis,
+} from "recharts";
 import { getCallerDashboard } from "@/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Spinner } from "@/components/ui/spinner";
+import {
+  ChartConfig,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+
+const emergencyConfig = {
+  value: { label: "Requests" },
+  pending: { label: "Pending", color: "var(--chart-1)" },
+  completed: { label: "Completed", color: "var(--chart-2)" },
+  cancelled: { label: "Cancelled", color: "var(--chart-3)" },
+} satisfies ChartConfig;
+
+const tripConfig = {
+  value: { label: "Trips" },
+  total: { label: "Total", color: "var(--chart-1)" },
+  completed: { label: "Completed", color: "var(--chart-2)" },
+} satisfies ChartConfig;
+
+const radarConfig = {
+  value: { label: "Count", color: "var(--chart-1)" },
+} satisfies ChartConfig;
 
 export default function CallerPage() {
   const {
@@ -27,11 +67,30 @@ export default function CallerPage() {
   } = useQuery({
     queryKey: ["caller-dashboard"],
     queryFn: getCallerDashboard,
-    staleTime: 0, // Data immediately becomes stale, forces refetch on mount
-    refetchOnMount: "always", // Always refetch when component mounts
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 
-  const stats = analytics?.data;
+  if (isLoading) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Spinner className="h-8 w-8" />
+      </div>
+    );
+  }
+
+  if (isError || !analytics?.data) {
+    return (
+      <div className="flex h-[50vh] flex-col items-center justify-center gap-2">
+        <AlertCircle className="h-8 w-8 text-destructive" />
+        <p className="text-sm text-muted-foreground">
+          Failed to load dashboard data
+        </p>
+      </div>
+    );
+  }
+
+  const stats = analytics.data;
 
   // Safely merge stats with defaults
   const dashboardStats = {
@@ -52,23 +111,69 @@ export default function CallerPage() {
     },
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <Spinner className="h-8 w-8" />
-      </div>
-    );
-  }
+  const emergencyStatusData = [
+    {
+      key: "pending",
+      value: dashboardStats.emergencies.pending,
+      fill: "var(--color-pending)",
+    },
+    {
+      key: "completed",
+      value: dashboardStats.emergencies.completed,
+      fill: "var(--color-completed)",
+    },
+    {
+      key: "cancelled",
+      value: dashboardStats.emergencies.cancelled,
+      fill: "var(--color-cancelled)",
+    },
+  ];
+
+  const tripStatusData = [
+    {
+      key: "total",
+      value: dashboardStats.trips.total,
+      fill: "var(--color-total)",
+    },
+    {
+      key: "completed",
+      value: dashboardStats.trips.completed,
+      fill: "var(--color-completed)",
+    },
+  ];
+
+  const activityRadarData = [
+    {
+      metric: "Emergencies",
+      value: dashboardStats.emergencies.total,
+    },
+    {
+      metric: "Completed",
+      value: dashboardStats.emergencies.completed,
+    },
+    {
+      metric: "Trips",
+      value: dashboardStats.trips.total,
+    },
+    {
+      metric: "Payments",
+      value: dashboardStats.payments.completedPayments,
+    },
+    {
+      metric: "Spending (K)",
+      value: Math.round(dashboardStats.payments.totalSpending / 1000),
+    },
+  ];
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-4 sm:px-6 lg:px-8">
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-6 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="font-heading text-2xl font-semibold tracking-tight">
+        <h1 className="font-heading text-3xl font-extrabold tracking-tight">
           Caller Dashboard
         </h1>
         <p className="text-sm text-muted-foreground">
-          Request emergency ambulance services and track your requests.
+          Request emergency ambulance services and track your requests
         </p>
       </div>
 
@@ -109,196 +214,348 @@ export default function CallerPage() {
         </Link>
       </div>
 
-      {/* Analytics Error State */}
-      {isError && (
-        <div className="flex flex-col items-center justify-center gap-2 rounded-lg border p-12">
-          <AlertCircle className="h-8 w-8 text-destructive" />
-          <p className="text-sm text-muted-foreground">
-            Failed to load dashboard analytics
-          </p>
-        </div>
-      )}
+      {/* Quick Stats Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Requests
+            </CardTitle>
+            <Activity className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {dashboardStats.emergencies.total}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              All emergency requests
+            </p>
+          </CardContent>
+        </Card>
 
-      {/* Analytics Sections */}
-      {!isError && (
-        <>
-          {/* Emergency Statistics */}
-          <div className="space-y-4">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Trips</CardTitle>
+            <Car className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {dashboardStats.trips.total}
+            </div>
+            <p className="text-xs text-muted-foreground">All ambulance trips</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Total Spending
+            </CardTitle>
+            <DollarSign className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              ৳{dashboardStats.payments.totalSpending.toLocaleString()}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {dashboardStats.payments.completedPayments} payments
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">
+              Pending Payments
+            </CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {dashboardStats.payments.pendingPayments}
+            </div>
+            <p className="text-xs text-muted-foreground">Awaiting payment</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Charts Section */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Emergency Status - Pie */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />
-              Emergency Requests
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Requests
-                  </CardTitle>
-                  <Activity className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {dashboardStats.emergencies.total}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    All emergency requests
-                  </p>
-                </CardContent>
-              </Card>
+              Emergency Status Distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1">
+            <ChartContainer
+              config={emergencyConfig}
+              className="mx-auto aspect-square max-h-75"
+            >
+              <PieChart>
+                <ChartTooltip
+                  content={<ChartTooltipContent hideLabel nameKey="key" />}
+                />
+                <Pie data={emergencyStatusData} dataKey="value" nameKey="key" />
+                <ChartLegend content={<ChartLegendContent nameKey="key" />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
 
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                  <Clock className="h-4 w-4 text-orange-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {dashboardStats.emergencies.pending}
-                  </div>
+        {/* Trip Status - Bar */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Car className="h-5 w-5" />
+              Trip Statistics
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer config={tripConfig} className="h-75 w-full">
+              <BarChart data={tripStatusData} accessibilityLayer>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="key"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={10}
+                  tickFormatter={(v) =>
+                    tripConfig[v as keyof typeof tripConfig].label
+                  }
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel nameKey="key" />}
+                />
+                <Bar dataKey="value" radius={8} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Payment Overview - Donut */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
+              Payment Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1">
+            <ChartContainer
+              config={{
+                value: { label: "Payments" },
+                completed: {
+                  label: "Completed",
+                  color: "var(--chart-2)",
+                },
+                pending: {
+                  label: "Pending",
+                  color: "var(--chart-1)",
+                },
+              }}
+              className="mx-auto aspect-square max-h-75"
+            >
+              <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel nameKey="key" />}
+                />
+                <Pie
+                  data={[
+                    {
+                      key: "completed",
+                      value: dashboardStats.payments.completedPayments,
+                      fill: "var(--color-completed)",
+                    },
+                    {
+                      key: "pending",
+                      value: dashboardStats.payments.pendingPayments,
+                      fill: "var(--color-pending)",
+                    },
+                  ]}
+                  dataKey="value"
+                  nameKey="key"
+                  innerRadius={65}
+                  strokeWidth={5}
+                >
+                  <Label
+                    content={({ viewBox }) => {
+                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                        return (
+                          <text
+                            x={viewBox.cx}
+                            y={viewBox.cy}
+                            textAnchor="middle"
+                            dominantBaseline="middle"
+                          >
+                            <tspan
+                              x={viewBox.cx}
+                              y={viewBox.cy}
+                              className="fill-foreground text-3xl font-bold"
+                            >
+                              {dashboardStats.payments.completedPayments +
+                                dashboardStats.payments.pendingPayments}
+                            </tspan>
+                            <tspan
+                              x={viewBox.cx}
+                              y={(viewBox.cy || 0) + 24}
+                              className="fill-muted-foreground text-xs"
+                            >
+                              Total
+                            </tspan>
+                          </text>
+                        );
+                      }
+                    }}
+                  />
+                </Pie>
+                <ChartLegend content={<ChartLegendContent nameKey="key" />} />
+              </PieChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        {/* Activity Overview - Radar */}
+        <Card className="flex flex-col">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Activity Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex-1">
+            <ChartContainer
+              config={radarConfig}
+              className="mx-auto aspect-square max-h-75"
+            >
+              <RadarChart data={activityRadarData}>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="line" />}
+                />
+                <PolarAngleAxis dataKey="metric" />
+                <PolarGrid />
+                <Radar
+                  dataKey="value"
+                  fill="var(--color-value)"
+                  fillOpacity={0.6}
+                  dot={{ r: 4, fillOpacity: 1 }}
+                />
+              </RadarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Detailed Statistics */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Emergency Details */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Emergency Request Details
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-center gap-3">
+                <Clock className="h-5 w-5 text-orange-500" />
+                <div>
+                  <p className="text-sm font-medium">Pending Requests</p>
                   <p className="text-xs text-muted-foreground">
                     Awaiting response
                   </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Completed
-                  </CardTitle>
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    {dashboardStats.emergencies.completed}
-                  </div>
+                </div>
+              </div>
+              <span className="text-2xl font-bold text-orange-600">
+                {dashboardStats.emergencies.pending}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <div>
+                  <p className="text-sm font-medium">Completed Requests</p>
                   <p className="text-xs text-muted-foreground">
                     Successfully resolved
                   </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Cancelled
-                  </CardTitle>
-                  <XCircle className="h-4 w-4 text-red-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-red-600">
-                    {dashboardStats.emergencies.cancelled}
-                  </div>
+                </div>
+              </div>
+              <span className="text-2xl font-bold text-green-600">
+                {dashboardStats.emergencies.completed}
+              </span>
+            </div>
+            <div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
+              <div className="flex items-center gap-3">
+                <XCircle className="h-5 w-5 text-red-500" />
+                <div>
+                  <p className="text-sm font-medium">Cancelled Requests</p>
                   <p className="text-xs text-muted-foreground">Not completed</p>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+              <span className="text-2xl font-bold text-red-600">
+                {dashboardStats.emergencies.cancelled}
+              </span>
             </div>
-          </div>
+          </CardContent>
+        </Card>
 
-          {/* Trip Statistics */}
-          <div className="space-y-4">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
-              <Car className="h-5 w-5" />
-              Trip History
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Trips
-                  </CardTitle>
-                  <Car className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    {dashboardStats.trips.total}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    All ambulance trips
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Completed Trips
-                  </CardTitle>
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    {dashboardStats.trips.completed}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Successfully finished
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-
-          {/* Payment Statistics */}
-          <div className="space-y-4">
-            <h2 className="font-semibold text-lg flex items-center gap-2">
+        {/* Payment Details - Horizontal Bar */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
-              Payment Overview
-            </h2>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Spending
-                  </CardTitle>
-                  <Wallet className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">
-                    ৳{dashboardStats.payments.totalSpending.toLocaleString()}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    All time spending
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Completed Payments
-                  </CardTitle>
-                  <CheckCircle2 className="h-4 w-4 text-green-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-green-600">
-                    {dashboardStats.payments.completedPayments}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Successful transactions
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Pending Payments
-                  </CardTitle>
-                  <CreditCard className="h-4 w-4 text-orange-500" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-orange-600">
-                    {dashboardStats.payments.pendingPayments}
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Awaiting payment
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </>
-      )}
+              Payment Breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ChartContainer
+              config={{
+                value: { label: "Amount" },
+                completed: {
+                  label: "Completed Payments",
+                  color: "var(--chart-2)",
+                },
+                pending: {
+                  label: "Pending Payments",
+                  color: "var(--chart-1)",
+                },
+              }}
+              className="h-[280px] w-full"
+            >
+              <BarChart
+                data={[
+                  {
+                    key: "completed",
+                    value: dashboardStats.payments.completedPayments,
+                    fill: "var(--color-completed)",
+                  },
+                  {
+                    key: "pending",
+                    value: dashboardStats.payments.pendingPayments,
+                    fill: "var(--color-pending)",
+                  },
+                ]}
+                layout="vertical"
+                accessibilityLayer
+                margin={{ left: 0 }}
+              >
+                <XAxis dataKey="value" type="number" hide />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel nameKey="key" />}
+                />
+                <Bar dataKey="value" radius={5} />
+              </BarChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Info Section */}
       <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4">

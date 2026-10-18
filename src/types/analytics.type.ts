@@ -47,30 +47,31 @@ export interface DispatcherDashboardAnalytics {
 }
 
 export interface DriverDashboardAnalytics {
+  profile: {
+    driverId: string;
+    approvalStatus: string;
+    isAvailable: boolean;
+    hasAmbulance: boolean;
+    ambulance: {
+      id: string;
+      ambulanceNumber: string;
+      status: string;
+      vehicleType: string;
+    } | null;
+  };
   trips: {
     total: number;
     completed: number;
-    cancelled: number;
-    inProgress: number;
   };
   dispatches: {
     total: number;
     pending: number;
     accepted: number;
     completed: number;
-    rejected: number;
   };
   earnings: {
     total: number;
-    thisMonth: number;
-    lastMonth: number;
-    pending: number;
-  };
-  performance: {
-    rating: number;
-    totalRatings: number;
-    acceptanceRate: number;
-    completionRate: number;
+    completedPayments: number;
   };
 }
 
